@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AFNetworking
 
 class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
@@ -16,25 +17,14 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(getNowPlaying(_:)), for: UIControlEvents.valueChanged)
+        tableView.insertSubview(refreshControl, at: 0)
         // Do any additional setup after loading the view.
         tableView.dataSource = self
         tableView.delegate = self
         
-        let apiKey = "f65d3699b29412f05fdccffae5a92b19"
-        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
-        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
-        let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
-        let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
-            if let data = data {
-                if let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
-                    print(dataDictionary)
-                    self.movies = dataDictionary["results"] as? [NSDictionary]
-                    self.tableView.reloadData()
-                }
-            }
-        }
-        task.resume()
+        getNowPlaying()
     }
 
     override func didReceiveMemoryWarning() {
@@ -56,10 +46,36 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let movie = movies?[indexPath.row]
         let title = movie?["title"] as! String
         let overview = movie?["overview"] as! String
+        
+        let baseUrl = "https://image.tmdb.org/t/p/w500"
+        let posterPath = movie?["poster_path"] as! String
+        
+        let imageUrl = URL(string: baseUrl + posterPath)
+        cell.posterView.setImageWith(imageUrl!)
+        
         cell.titleLabel.text = title
         cell.overviewLabel.text = overview
+        
         print("row \(indexPath.row)")
         return cell
+    }
+    
+    func getNowPlaying(_ refreshControl: UIRefreshControl=UIRefreshControl()) {
+        let apiKey = "f65d3699b29412f05fdccffae5a92b19"
+        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
+        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
+        let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
+        let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
+            if let data = data {
+                if let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
+                    print(dataDictionary)
+                    self.movies = dataDictionary["results"] as? [NSDictionary]
+                    self.tableView.reloadData()
+                    refreshControl.endRefreshing()
+                }
+            }
+        }
+        task.resume()
     }
     /*
     // MARK: - Navigation
