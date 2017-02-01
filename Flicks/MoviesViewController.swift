@@ -10,12 +10,10 @@ import UIKit
 import AFNetworking
 import ALLoadingView
 
-class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class MoviesViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     @IBOutlet weak var networkError: UIView!
-
-    @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var networkErrorLabel: UILabel!
-    
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     var movies: [NSDictionary]?
     
     override func viewDidLoad() {
@@ -24,10 +22,10 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         self.view.bringSubview(toFront: networkError)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(getNowPlaying(_:)), for: UIControlEvents.valueChanged)
-        tableView.insertSubview(refreshControl, at: 0)
+        collectionView.insertSubview(refreshControl, at: 0)
         // Do any additional setup after loading the view.
-        tableView.dataSource = self
-        tableView.delegate = self
+        collectionView.dataSource = self
+        collectionView.delegate = self
         
         getNowPlaying()
     }
@@ -37,32 +35,32 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // Dispose of any resources that can be recreated.
     }
     
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if let movies = movies {
             return movies.count
         } else {
             return 0
         }
-        
     }
     
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MovieCell", for: indexPath) as! MovieCell
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MovieCell", for: indexPath) as! MovieCell
         let movie = movies?[indexPath.row]
-        let title = movie?["title"] as! String
-        let overview = movie?["overview"] as! String
+        //let title = movie?["title"] as! String
+        //`let overview = movie?["overview"] as! String
         
         let baseUrl = "https://image.tmdb.org/t/p/w500"
         let posterPath = movie?["poster_path"] as! String
         
         let imageUrl = URL(string: baseUrl + posterPath)
         cell.posterView.setImageWith(imageUrl!)
-        
-        cell.titleLabel.text = title
-        cell.overviewLabel.text = overview
-        
         print("row \(indexPath.row)")
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let totalWidth = collectionView.bounds.width
+        return CGSize(width: CGFloat(totalWidth / 2 - 5), height: 240)
     }
     
     func getNowPlaying(_ refreshControl: UIRefreshControl=UIRefreshControl()) {
@@ -77,7 +75,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                 if let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
                     print(dataDictionary)
                     self.movies = dataDictionary["results"] as? [NSDictionary]
-                    self.tableView.reloadData()
+                    self.collectionView.reloadData()
                     refreshControl.endRefreshing()
                     ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
                     self.networkError.isHidden = true
