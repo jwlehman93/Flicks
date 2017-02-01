@@ -7,5 +7,6 @@ target 'Flicks' do
   
   # Pods for Flicks
   pod 'AFNetworking', '~> 3.0'
+  pod 'ALLoadingView', '~>1.1.2'
 
 end

@@ -8,6 +8,7 @@
 
 import UIKit
 import AFNetworking
+import ALLoadingView
 
 class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
@@ -61,6 +62,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     }
     
     func getNowPlaying(_ refreshControl: UIRefreshControl=UIRefreshControl()) {
+        ALLoadingView.manager.blurredBackground = true
+        ALLoadingView.manager.showLoadingView(ofType: .basic, windowMode: .fullscreen)
         let apiKey = "f65d3699b29412f05fdccffae5a92b19"
         let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
@@ -72,7 +75,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     self.movies = dataDictionary["results"] as? [NSDictionary]
                     self.tableView.reloadData()
                     refreshControl.endRefreshing()
+                    ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
                 }
+            } else {
+                refreshControl.endRefreshing()
+                ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
+
             }
         }
         task.resume()

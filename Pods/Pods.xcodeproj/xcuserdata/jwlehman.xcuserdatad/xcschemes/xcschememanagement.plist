@@ -9,6 +9,11 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>ALLoadingView.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>Pods-Flicks.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -17,7 +22,12 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>C4AB8BE7762D16DFFB60862310F45AEE</key>
+		<key>35C149B1BDA5B53C84B89A37BF2F6CCB</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>3B960FEB5CCDC5A75869EBE0D184F281</key>
 		<dict>
 			<key>primary</key>
 			<true/>
