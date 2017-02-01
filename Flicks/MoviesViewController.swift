@@ -11,13 +11,17 @@ import AFNetworking
 import ALLoadingView
 
 class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+    @IBOutlet weak var networkError: UIView!
 
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var networkErrorLabel: UILabel!
     
     var movies: [NSDictionary]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        networkError.isHidden = true
+        self.view.bringSubview(toFront: networkError)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(getNowPlaying(_:)), for: UIControlEvents.valueChanged)
         tableView.insertSubview(refreshControl, at: 0)
@@ -76,11 +80,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     self.tableView.reloadData()
                     refreshControl.endRefreshing()
                     ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
+                    self.networkError.isHidden = true
                 }
             } else {
                 refreshControl.endRefreshing()
                 ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
-
+                self.networkError.isHidden = false
             }
         }
         task.resume()
