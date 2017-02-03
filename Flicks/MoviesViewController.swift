@@ -10,15 +10,19 @@ import UIKit
 import AFNetworking
 import ALLoadingView
 
-class MoviesViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+class MoviesViewController: UIViewController {
     @IBOutlet weak var networkError: UIView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    @IBOutlet weak var searchBar: UISearchBar!
+
     var movies: [NSDictionary]?
+    var filteredMovies: [NSDictionary]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         networkError.isHidden = true
+        collectionView.bringSubview(toFront: searchBar)
         self.view.bringSubview(toFront: networkError)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(getNowPlaying(_:)), for: UIControlEvents.valueChanged)
@@ -26,7 +30,7 @@ class MoviesViewController: UIViewController, UICollectionViewDataSource, UIColl
         // Do any additional setup after loading the view.
         collectionView.dataSource = self
         collectionView.delegate = self
-        
+        searchBar.delegate = self
         getNowPlaying()
     }
 
@@ -35,33 +39,7 @@ class MoviesViewController: UIViewController, UICollectionViewDataSource, UIColl
         // Dispose of any resources that can be recreated.
     }
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let movies = movies {
-            return movies.count
-        } else {
-            return 0
-        }
-    }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MovieCell", for: indexPath) as! MovieCell
-        let movie = movies?[indexPath.row]
-        //let title = movie?["title"] as! String
-        //`let overview = movie?["overview"] as! String
-        
-        let baseUrl = "https://image.tmdb.org/t/p/w500"
-        let posterPath = movie?["poster_path"] as! String
-        
-        let imageUrl = URL(string: baseUrl + posterPath)
-        cell.posterView.setImageWith(imageUrl!)
-        print("row \(indexPath.row)")
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let totalWidth = collectionView.bounds.width
-        return CGSize(width: CGFloat(totalWidth / 2 - 5), height: 240)
-    }
     
     func getNowPlaying(_ refreshControl: UIRefreshControl=UIRefreshControl()) {
         ALLoadingView.manager.blurredBackground = true
@@ -73,8 +51,8 @@ class MoviesViewController: UIViewController, UICollectionViewDataSource, UIColl
         let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
             if let data = data {
                 if let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
-                    print(dataDictionary)
                     self.movies = dataDictionary["results"] as? [NSDictionary]
+                    self.filteredMovies = dataDictionary["results"] as? [NSDictionary]
                     self.collectionView.reloadData()
                     refreshControl.endRefreshing()
                     ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
@@ -98,4 +76,58 @@ class MoviesViewController: UIViewController, UICollectionViewDataSource, UIColl
     }
     */
 
+}
+
+extension MoviesViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if let movies = filteredMovies {
+            return movies.count
+        } else {
+            return 0
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MovieCell", for: indexPath) as! MovieCell
+        let movie = filteredMovies?[indexPath.row]
+        // let title = movie?["title"] as! String
+        // let overview = movie?["overview"] as! String
+        
+        let baseUrl = "https://image.tmdb.org/t/p/w500"
+        let posterPath = movie?["poster_path"] as! String
+        
+        let imageUrl = URL(string: baseUrl + posterPath)
+        cell.posterView.setImageWith(imageUrl!)
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let totalWidth = collectionView.bounds.width
+        return CGSize(width: CGFloat(totalWidth / 2 - 5), height: 240)
+    }
+}
+
+extension MoviesViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if let movies = movies {
+            filteredMovies = searchText.isEmpty ? movies : movies.filter({(movie: NSDictionary) -> Bool in
+                let title = movie["title"] as! String
+                return (title.range(of: searchText, options: .caseInsensitive) != nil)
+        })
+        collectionView.reloadData()
+        }
+    }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        self.searchBar.showsCancelButton = true
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.showsCancelButton = false
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        filteredMovies = movies
+        collectionView.reloadData()
+    }
 }

@@ -2,7 +2,7 @@
 
 **Flicks** is a movies app using the [The Movie Database API](http://docs.themoviedb.apiary.io/#).
 
-Time spent: **1** hours spent in total
+Time spent: **4** hours spent in total
 
 ## User Stories
 
@@ -17,13 +17,13 @@ The following **optional** features are implemented:
 
 - [x] User sees an error message when there's a networking error.
 - [x] Movies are displayed using a CollectionView instead of a TableView.
-- [ ] User can search for a movie.
+- [x] User can search for a movie.
 - [ ] All images fade in as they are loading.
 - [ ] Customize the UI.
 
 The following **additional** features are implemented:
 
-- [ ] List anything else that you can get done to improve the app functionality!
+- [ ] Overview comes up on click of poster view
 
 Please list two areas of the assignment you'd like to **discuss further with your peers** during the next class (examples include better ways to implement something, how to extend your app in certain ways, etc):
 
