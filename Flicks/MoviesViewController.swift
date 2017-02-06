@@ -55,12 +55,12 @@ class MoviesViewController: UIViewController {
                     self.filteredMovies = dataDictionary["results"] as? [NSDictionary]
                     self.collectionView.reloadData()
                     refreshControl.endRefreshing()
-                    ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
+                    ALLoadingView.manager.hideLoadingView(withDelay: 0.1)
                     self.networkError.isHidden = true
                 }
             } else {
                 refreshControl.endRefreshing()
-                ALLoadingView.manager.hideLoadingView(withDelay: 1.0)
+                ALLoadingView.manager.hideLoadingView(withDelay: 0.1)
                 self.networkError.isHidden = false
             }
         }
@@ -98,7 +98,19 @@ extension MoviesViewController: UICollectionViewDataSource, UICollectionViewDele
         let posterPath = movie?["poster_path"] as! String
         
         let imageUrl = URL(string: baseUrl + posterPath)
-        cell.posterView.setImageWith(imageUrl!)
+        let imageRequest = URLRequest(url: imageUrl!)
+        cell.posterView.setImageWith(imageRequest, placeholderImage: nil, success: {(imageRequest, imageResponse, image) -> Void in
+            if imageResponse != nil {
+                cell.posterView.alpha = 0.0
+                cell.posterView.image = image
+                UIView.animate(withDuration: 1.0, animations: {() -> Void in
+                    cell.posterView.alpha = 1.0
+                })
+            } else {
+                cell.posterView.image = image
+            }}, failure: {(imageRequest, imageResponse, error) -> Void in
+                print(error)
+        })
         return cell
     }
     
